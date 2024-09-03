@@ -41,7 +41,6 @@ def _get_rerun_conf(file_path: str, overrides: List[str]) -> DictConfig:
     assert isinstance(task_cfg, DictConfig)
     return task_cfg
 
-
 def main(
     config_path: Optional[str] = _UNSPECIFIED_,
     config_name: Optional[str] = None,
@@ -77,6 +76,14 @@ def main(
             config_path = "."
 
     def main_decorator(task_function: TaskFunction) -> Callable[[], None]:
+        def get_docstring() -> str:
+            try:
+                return inspect.getdoc(task_function) or None
+            except:
+                return None
+
+        OmegaConf.register_new_resolver("_main_func_docstring", get_docstring, replace=False)
+        
         @functools.wraps(task_function)
         def decorated_main(cfg_passthrough: Optional[DictConfig] = None) -> Any:
             if cfg_passthrough is not None:
